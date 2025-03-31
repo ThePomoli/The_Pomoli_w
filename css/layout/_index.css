@@ -1,0 +1,108 @@
+.page {
+  background: #000;
+}
+.page .container {
+  height: 100vh;
+  margin: auto;
+  position: relative;
+}
+
+#loadingpage {
+  background: #5b6398;
+}
+#loadingpage .container .loadingimg {
+  margin: auto;
+  position: absolute;
+  height: 15vw;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+}
+
+#storypage {
+  display: none;
+}
+
+#replaypage {
+  display: none;
+}
+#replaypage #handvideo2 {
+  display: none;
+}
+
+#playpage {
+  display: none;
+}
+#playpage .container .wallbg {
+  position: absolute;
+  height: 100%;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+}
+#playpage .container #wallbg2, #playpage .container #wallbg3, #playpage .container #wallbg4, #playpage .container #wallbg5, #playpage .container canvas, #playpage .container .wh {
+  opacity: 0;
+  -webkit-transition: opacity 3s ease-in-out;
+  transition: opacity 3s ease-in-out;
+}
+#playpage .container #wallbg2 {
+  z-index: 2;
+}
+#playpage .container #wallbg3 {
+  z-index: 3;
+}
+#playpage .container #wallbg4 {
+  z-index: 4;
+}
+#playpage .container #wallbg5 {
+  z-index: 5;
+}
+#playpage .container canvas {
+  position: absolute;
+  z-index: 1000;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+  opacity: 0;
+  -webkit-transition: opacity 3s ease-in-out;
+  transition: opacity 3s ease-in-out;
+}
+#playpage .container .wh {
+  position: absolute;
+  bottom: 5vw;
+  z-index: 10;
+  margin: auto;
+  height: 12vw;
+  left: 50%;
+  -webkit-transform: translateX(-50%);
+          transform: translateX(-50%);
+}
+#playpage .container #input-video {
+  display: none;
+}
+
+.show {
+  opacity: 1 !important;
+}
+
+#p5_loading {
+  display: none;
+}
+
+video {
+  height: 100%;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+  position: absolute;
+}
+
+img {
+  width: auto;
+  height: 100%;
+}
+/*# sourceMappingURL=_index.css.map */
