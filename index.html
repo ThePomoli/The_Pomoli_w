@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Pomoli</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.6.0"></script>
+    <!-- 建議使用此版本 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection"></script>
+    <link rel="stylesheet" href="./css/main.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div id="wrapper">
+        <!-- <header></header> -->
+        <div id="main">
+            <div class="page" id="loadingpage">
+                <div class="container">
+                    <div class="loadingimg">
+                        <img src="./img/loading.gif" alt="">
+                    </div>
+                </div>
+            </div>
+            <div class="page" id="storypage">
+                <div class="container">
+                    <video id="storypage_video" src="./img/story.mp4" preload="auto" controls></video>
+                    <!-- <audio id="storypage_audio" src="./audio/story.mp3" preload="auto"></audio> -->
+                </div>
+            </div>
+            <div class="page" id="replaypage">
+                <div class="container">
+                    <!-- <div class="replaypagebg"><img src="./img/replaypagebg.png" alt=""></div> -->
+                    <video id="handvideo1" src="./img/hand1.mp4" muted></video> 
+                    <video id="handvideo2" src="./img/hand2.mp4" muted></video>
+                </div>
+            </div>
+            <div class="page" id="playpage">
+                <div class="container">
+                    <video class="wallbg" id="wallbg1" src="./img/wallbg1.mp4" muted loop  preload="auto"></video>
+                    <div class="wallbg" id="wallbg2"><img src="./img/wallbg2.png" alt=""></div>
+                    <div class="wallbg" id="wallbg3"><img src="./img/wallbg3.png" alt=""></div>
+                    <div class="wallbg" id="wallbg4"><img src="./img/wallbg4.png" alt=""></div>
+                    <div class="wallbg" id="wallbg5"><img src="./img/wallbg5.png" alt=""></div>
+                    <div class="wh"><img src="./img/wh9.png" alt=""></div>
+                    <video id="input-video" autoplay playsinline></video>
+                    <audio id="playpagebgmusic" src="./audio/playpagebgmusic.MP3" preload="auto" loop></audio>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="screen_change.js" type="module"></script>
+    <script src="main_fish.js"></script>
+    <script src="main_mediapipe.js"></script>
+</body>
+
+</html>
