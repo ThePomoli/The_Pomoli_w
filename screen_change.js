@@ -99,6 +99,7 @@ $(document).ready(function () {
     }
 
     function setupReplayLogic() {
+        
         const handvideo2 = document.getElementById('handvideo2');
         handvideo2.pause();
         handvideo2.currentTime = 0;
@@ -108,18 +109,13 @@ $(document).ready(function () {
 
         const interval = setInterval(() => {
             const hands = window.handKeypoints;
+            //console.log(window.handKeypoints);
             let newDirection = 0;
 
-            if (!hands || hands.length !== 2) {
+            if (!hands || hands.length <2) {
                 newDirection = -1;
             } else {
-                let left = hands.find(h => h[0].x < h[9].x);
-                let right = hands.find(h => h[0].x > h[9].x);
-                if (left && right && isHandOpen(left) && isHandOpen(right)) {
-                    newDirection = 1;
-                } else {
-                    newDirection = -1;
-                }
+                newDirection = 1;
             }
 
             if (newDirection !== lastDirection) {
@@ -172,6 +168,54 @@ $(document).ready(function () {
         const tips = [8, 12, 16, 20];
         const base = hand[0];
         return tips.every(i => hand[i].y < base.y);
+    }
+
+    let lastWhIndex = 9;
+
+    setInterval(() => {
+        const whImg = document.querySelector('.wh img');
+        if (!whImg) return;
+
+        const src = whImg.getAttribute('src');
+        const match = src.match(/wh(\d+)\.png/);
+        if (!match) return;
+
+        const currentIndex = parseInt(match[1]);
+        if (lastWhIndex !== currentIndex && currentIndex === 1) {
+            lastWhIndex = currentIndex;
+            triggerToAfterPlayPage();
+        } else {
+            lastWhIndex = currentIndex;
+        }
+    }, 200); // 每 200ms 檢查一次
+
+    function triggerToAfterPlayPage() {
+        const bgm = document.getElementById('playpagebgmusic');
+
+        // 淡出音樂
+        const fadeDuration = 2000;
+        const step = 0.05;
+        const interval = fadeDuration / (1 / step);
+        let currentGain = gainNode.gain.value;
+
+        const fadeOutAudio = setInterval(() => {
+            currentGain -= step;
+            if (currentGain <= 0) {
+                currentGain = 0;
+                clearInterval(fadeOutAudio);
+                bgm.pause();
+            }
+            gainNode.gain.setValueAtTime(currentGain, audioContext.currentTime);
+        }, interval);
+
+        // 頁面轉場
+        $('#playpage').fadeOut(1000, function () {
+            $('#afterplaypage').fadeIn(1000, () => {
+                const afterVideo = $('#afterplaypage video')[0];
+                afterVideo.currentTime = 0;
+                afterVideo.play().catch(console.warn);
+            });
+        });
     }
 
 });

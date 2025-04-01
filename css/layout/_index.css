@@ -84,6 +84,10 @@
   display: none;
 }
 
+#afterplaypage {
+  display: none;
+}
+
 .show {
   opacity: 1 !important;
 }
