@@ -26,6 +26,7 @@ let gainNode;
 
 $(document).ready(function () {
 
+
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const bgm = document.getElementById('playpagebgmusic');
     bgmSource = audioContext.createMediaElementSource(bgm);
@@ -99,7 +100,7 @@ $(document).ready(function () {
     }
 
     function setupReplayLogic() {
-        
+
         const handvideo2 = document.getElementById('handvideo2');
         handvideo2.pause();
         handvideo2.currentTime = 0;
@@ -109,10 +110,9 @@ $(document).ready(function () {
 
         const interval = setInterval(() => {
             const hands = window.handKeypoints;
-            //console.log(window.handKeypoints);
             let newDirection = 0;
 
-            if (!hands || hands.length <2) {
+            if (!hands || hands.length < 2) {
                 newDirection = -1;
             } else {
                 newDirection = 1;
@@ -170,26 +170,48 @@ $(document).ready(function () {
         return tips.every(i => hand[i].y < base.y);
     }
 
-    let lastWhIndex = 9;
+    let lastWhIndex = 26;
 
     setInterval(() => {
         const whImg = document.querySelector('.wh img');
         if (!whImg) return;
-
+    
         const src = whImg.getAttribute('src');
         const match = src.match(/wh(\d+)\.png/);
         if (!match) return;
-
+    
         const currentIndex = parseInt(match[1]);
-        if (lastWhIndex !== currentIndex && currentIndex === 1) {
-            lastWhIndex = currentIndex;
+    
+        // 如果已經變成 wh26，則觸發結束
+        if (currentIndex === 26 && lastWhIndex !== 26) {
+            lastWhIndex = 26;
             triggerToAfterPlayPage();
-        } else {
+            return;
+        }
+    
+        // 若有變化但不是 26，就更新時間
+        if (currentIndex !== lastWhIndex) {
+            whTimerStartTime = Date.now();
             lastWhIndex = currentIndex;
         }
-    }, 200); // 每 200ms 檢查一次
+    
+        // 判斷是否等待超時
+        const elapsed = Date.now() - whTimerStartTime;
+        if (elapsed > MAX_WH_WAIT_TIME) {
+            triggerToAfterPlayPage();
+        }
+    }, 200);
+    
+
+    let hasTriggeredAfter = false;
+    let whTimerStartTime = Date.now();
+    const MAX_WH_WAIT_TIME = 7 * 60 * 1000; // 7 分鐘
+
 
     function triggerToAfterPlayPage() {
+
+        if (hasTriggeredAfter) return;
+        hasTriggeredAfter = true;
         const bgm = document.getElementById('playpagebgmusic');
 
         // 淡出音樂

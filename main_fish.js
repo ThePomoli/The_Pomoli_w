@@ -5,9 +5,9 @@ let myP5 = new p5((p) => {
     let leafImage;
     let assetsLoaded = false;
     const palmPolygonIndices = [0, 1, 2, 3, 5, 9, 13, 17, 0];
-    let whImageIndex = 9;
-    let whTargetIndex = 9;
-    let whChangeDelay = 300;
+    let whImageIndex = 26;
+    let whTargetIndex = 26;
+    let whChangeDelay = 200;
     let lastWhChangeTime = 0;
 
 
@@ -44,20 +44,20 @@ let myP5 = new p5((p) => {
         // 取得 playpage container 和 wallbg1 元素
         const container = document.querySelector('#playpage .container');
         const wallbg1 = document.getElementById('wallbg1'); // 這是你想要的背景圖
-    
+
         if (!container || !wallbg1 || wallbg1.offsetWidth === 0 || wallbg1.offsetHeight === 0) {
             setTimeout(p.setup, 100);
             return;
         }
-    
+
         // 使用 wallbg1 的寬高來設置 canvas
         const canvasWidth = wallbg1.offsetWidth;
         const canvasHeight = wallbg1.offsetHeight;
-    
+
         const canvas = p.createCanvas(canvasWidth, canvasHeight);
         container.appendChild(canvas.elt);
         canvas.elt.setAttribute('willReadFrequently', 'true');
-    
+
         // 設置 fishArray 和其他設定
         for (let i = 0; i < numFish; i++) {
             let pos;
@@ -69,7 +69,7 @@ let myP5 = new p5((p) => {
             } while (isInHand(pos.x, pos.y));
             fishArray.push(new Fish(pos.x, pos.y));
         }
-    
+
         // 窗口調整時更新 canvas 大小
         function windowResized() {
             const wallbg1 = document.getElementById('wallbg1');
@@ -79,10 +79,10 @@ let myP5 = new p5((p) => {
                 p.resizeCanvas(newCanvasWidth, newCanvasHeight);
             }
         }
-    
+
         window.addEventListener('resize', windowResized);
     };
-    
+
 
     p.draw = function () {
         if (!assetsLoaded) return;
@@ -178,11 +178,17 @@ let myP5 = new p5((p) => {
             fish.display(p);
         }
         // 判斷是否有魚停在手上
-        let hasLandedFish = fishArray.some(fish => fish.landed);
-        whTargetIndex = hasLandedFish ? 1 : 9;
+        let now = Date.now();
+        const MIN_LANDED_FISH = 3;
+        const MIN_LANDED_TIME = 2000;
+
+        let landedFishCount = fishArray.filter(fish => fish.landed && (now - fish.landedTime >= MIN_LANDED_TIME)).length;
+        whTargetIndex = landedFishCount >= MIN_LANDED_FISH ? 26 : 1;
+
+
 
         // 換圖的動畫控制
-        let now = Date.now();
+        //let now = Date.now();
         if (now - lastWhChangeTime > whChangeDelay) {
             if (whImageIndex !== whTargetIndex) {
                 if (whImageIndex < whTargetIndex) {
@@ -227,6 +233,7 @@ let myP5 = new p5((p) => {
             this.texture = p.random(fishTextures);
             this.landed = false;
             this.landingTarget = null;
+            this.landedTime = 0;
         }
 
         update() {
@@ -270,6 +277,8 @@ let myP5 = new p5((p) => {
             const collisionThreshold = 50;
             const lowSpeedThreshold = 2;
 
+            let collided = false;
+
             if (window.handKeypoints && window.handKeypointsSpeed) {
                 const video = document.getElementById('input-video');
                 const videoWidth = video.videoWidth;
@@ -278,6 +287,7 @@ let myP5 = new p5((p) => {
                 for (let handIndex = 0; handIndex < window.handKeypoints.length; handIndex++) {
                     const hand = window.handKeypoints[handIndex];
                     const handSpeed = window.handKeypointsSpeed[handIndex];
+
                     for (let kpIndex = 0; kpIndex < hand.length; kpIndex++) {
                         const kp = hand[kpIndex];
                         const speed = handSpeed[kpIndex];
@@ -285,13 +295,22 @@ let myP5 = new p5((p) => {
 
                         let d = p.dist(this.position.x, this.position.y, mapped.x, mapped.y);
                         if (d < collisionThreshold) {
+                            collided = true;
+
                             if (speed < lowSpeedThreshold) {
                                 let offset = 30;
                                 this.landingTarget = p.createVector(mapped.x, mapped.y - offset);
                                 this.landed = true;
                                 this.speed = 0;
+
+                                // 記錄 landed 起始時間
+                                if (this.landedTime === 0) {
+                                    this.landedTime = Date.now();
+                                }
+
                             } else {
                                 this.landed = false;
+                                this.landedTime = 0;
                                 let escapeAngle = p.atan2(this.position.y - mapped.y, this.position.x - mapped.x);
                                 this.targetAngle = escapeAngle;
                                 this.speed = this.maxEscapeSpeed;
@@ -301,8 +320,12 @@ let myP5 = new p5((p) => {
                     }
                 }
             }
-            this.landed = false;
-            this.speed = p.lerp(this.speed, this.baseSpeed, 0.05);
+
+            if (!collided) {
+                this.landed = false;
+                this.landedTime = 0;
+                this.speed = p.lerp(this.speed, this.baseSpeed, 0.05);
+            }
         }
 
         display(p) {
