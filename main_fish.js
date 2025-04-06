@@ -200,7 +200,12 @@ let myP5 = new p5((p) => {
 
                 // 更新圖檔
                 let whImg = document.querySelector('.wh img');
-                whImg.src = `./img/wh${whImageIndex}.png`;
+                let newImg = new Image();
+                newImg.onload = () => {
+                    whImg.src = newImg.src;
+                };
+                newImg.src = `./img/wh${whImageIndex}.png`;
+
             }
         }
 
