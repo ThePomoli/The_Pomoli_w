@@ -239,7 +239,7 @@ $(document).ready(function () {
 
                 afterVideo.addEventListener('ended', function () {
                     $('#afterplaypage').fadeOut(200, function () {
-                        $('#loadingpage').fadeIn(200, function () {
+                        $('#loadingpage').fadeIn(1000, function () {
                             setTimeout(() => {
                                 location.reload();
                             }, 10000); // 10秒 = 10000ms
