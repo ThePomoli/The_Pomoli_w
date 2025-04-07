@@ -229,7 +229,7 @@ let myP5 = new p5((p) => {
             this.position = p.createVector(x, y);
             this.baseSpeed = p.random(0.5, 0.8);
             this.speed = this.baseSpeed;
-            this.maxEscapeSpeed = 10;
+            this.maxEscapeSpeed = 15;
             this.angle = p.random(p.TWO_PI);
             this.targetAngle = this.angle;
             this.changeDirectionInterval = p.int(p.random(100, 300));
