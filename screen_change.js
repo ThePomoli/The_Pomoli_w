@@ -100,33 +100,36 @@ $(document).ready(function () {
     }
 
     function setupReplayLogic() {
-
         const handvideo2 = document.getElementById('handvideo2');
         handvideo2.pause();
         handvideo2.currentTime = 0;
-
+    
         let lastPlayAttempt = 0;
         let lastDirection = 0;
-
+        let isTryingToPlay = false;
+    
         const interval = setInterval(() => {
             const hands = window.handKeypoints;
             let newDirection = 0;
-
+    
             if (!hands || hands.length < 2) {
-                newDirection = -1;
+                newDirection = -1; // 不足兩隻手，倒播
             } else {
-                newDirection = 1;
+                newDirection = 1; // 有兩隻手，正播
             }
-
+    
             if (newDirection !== lastDirection) {
                 lastDirection = newDirection;
-                lastPlayAttempt = Date.now(); // 記錄方向變化的時間
+                lastPlayAttempt = Date.now(); // 紀錄方向改變時間
             }
-
-            // 控制播放方向
+    
             if (newDirection === 1) {
-                if (handvideo2.paused && Date.now() - lastPlayAttempt > 100) {
-                    handvideo2.play().catch(err => {
+                if (handvideo2.paused && !isTryingToPlay && Date.now() - lastPlayAttempt > 100) {
+                    isTryingToPlay = true;
+                    handvideo2.play().then(() => {
+                        isTryingToPlay = false;
+                    }).catch(err => {
+                        isTryingToPlay = false;
                         console.warn("play() 被中斷：", err);
                     });
                 }
@@ -134,16 +137,18 @@ $(document).ready(function () {
                 if (!handvideo2.paused && Date.now() - lastPlayAttempt > 100) {
                     handvideo2.pause();
                 }
-                if (handvideo2.currentTime > 0.04) {
-                    handvideo2.currentTime -= 0.04;
-                } else {
-                    handvideo2.currentTime = 0;
-                }
+    
+                // 加一點延遲再回放，避免與 play() 衝突
+                setTimeout(() => {
+                    if (handvideo2.currentTime > 0.04) {
+                        handvideo2.currentTime -= 0.04;
+                    } else {
+                        handvideo2.currentTime = 0;
+                    }
+                }, 20);
             }
-
         }, 40);
-
-
+    
         // ✅ 播放到結尾，準備進入 playpage
         handvideo2.addEventListener('ended', () => {
             clearInterval(interval);
@@ -156,7 +161,7 @@ $(document).ready(function () {
                 });
             });
         });
-    }
+    }    
 
 
     // ✅ 監控 playpage 是否被隱藏
@@ -231,15 +236,19 @@ $(document).ready(function () {
         }, interval);
 
         // 頁面轉場
-        $('#playpage').fadeOut(1000, function () {
-            $('#afterplaypage').fadeIn(200, () => {
+        $('#playpage').fadeOut(200, function () {
+            $('#afterplaypage').fadeIn(500, () => {
                 const afterVideo = $('#afterplaypage video')[0];
                 afterVideo.currentTime = 0;
-                afterVideo.play().catch(console.warn);
+                afterVideo.play().catch(console.warn)
 
                 afterVideo.addEventListener('ended', function () {
                     $('#afterplaypage').fadeOut(200, function () {
-                        $('#loadingpage').fadeIn(200);
+                        $('#loadingpage').fadeIn(200, function () {
+                            setTimeout(() => {
+                                location.reload();
+                            }, 10000); // 10秒 = 10000ms
+                        });
                     });
                 });
             });
