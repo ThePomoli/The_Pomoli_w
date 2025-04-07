@@ -186,7 +186,6 @@ let myP5 = new p5((p) => {
         whTargetIndex = landedFishCount >= MIN_LANDED_FISH ? 26 : 1;
 
 
-
         // 換圖的動畫控制
         //let now = Date.now();
         if (now - lastWhChangeTime > whChangeDelay) {
