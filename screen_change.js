@@ -232,10 +232,16 @@ $(document).ready(function () {
 
         // 頁面轉場
         $('#playpage').fadeOut(1000, function () {
-            $('#afterplaypage').fadeIn(1000, () => {
+            $('#afterplaypage').fadeIn(200, () => {
                 const afterVideo = $('#afterplaypage video')[0];
                 afterVideo.currentTime = 0;
                 afterVideo.play().catch(console.warn);
+
+                afterVideo.addEventListener('ended', function () {
+                    $('#afterplaypage').fadeOut(200, function () {
+                        $('#loadingpage').fadeIn(200);
+                    });
+                });
             });
         });
     }
