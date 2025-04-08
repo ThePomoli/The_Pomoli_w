@@ -173,6 +173,7 @@ $(document).ready(function () {
     let lastWhIndex = 26;
 
     setInterval(() => {
+        if ($('#playpage').css('display') !== 'block') return;
         const whImg = document.querySelector('.wh img');
         if (!whImg) return;
     
