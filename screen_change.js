@@ -239,13 +239,7 @@ $(document).ready(function () {
                 afterVideo.play().catch(console.warn)
 
                 afterVideo.addEventListener('ended', function () {
-                    $('#afterplaypage').fadeOut(0, function () {
-                        $('#loadingpage').fadeIn(800, function () {
-                            setTimeout(() => {
-                                location.reload();
-                            }, 10000); // 10秒 = 10000ms
-                        });
-                    });
+                     location.reload();
                 });
             });
         });
