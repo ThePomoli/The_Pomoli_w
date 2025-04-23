@@ -336,7 +336,7 @@ html, body {
 #playpage {
   display: none;
 }
-#playpage .container .wallbg {
+#playpage .container .wallbg, #playpage .container canvas {
   position: absolute;
   height: 100%;
   top: 50%;
@@ -346,31 +346,39 @@ html, body {
 }
 #playpage .container #wallbg2, #playpage .container #wallbg3, #playpage .container #wallbg4, #playpage .container #wallbg5, #playpage .container canvas, #playpage .container .wh {
   opacity: 0;
-  -webkit-transition: opacity 3s ease-in-out;
-  transition: opacity 3s ease-in-out;
+  -webkit-transition: opacity 2s ease-in-out;
+  transition: opacity 2s ease-in-out;
+}
+#playpage .container canvas {
+  z-index: 12;
 }
 #playpage .container #wallbg2 {
   z-index: 2;
 }
 #playpage .container #wallbg3 {
-  z-index: 3;
-}
-#playpage .container #wallbg4 {
+  background: rgba(160, 160, 160, 0.2);
   z-index: 4;
 }
+#playpage .container #wallbg4 {
+  z-index: 6;
+}
 #playpage .container #wallbg5 {
+  z-index: 8;
+}
+#playpage .container #fishlayer0 {
+  z-index: 1;
+}
+#playpage .container #fishlayer1 {
+  z-index: 3;
+}
+#playpage .container #fishlayer2 {
   z-index: 5;
 }
-#playpage .container canvas {
-  position: absolute;
-  z-index: 1000;
-  top: 50%;
-  left: 50%;
-  -webkit-transform: translate(-50%, -50%);
-          transform: translate(-50%, -50%);
-  opacity: 0;
-  -webkit-transition: opacity 3s ease-in-out;
-  transition: opacity 3s ease-in-out;
+#playpage .container #fishlayer3 {
+  z-index: 7;
+}
+#playpage .container #fishlayer4 {
+  z-index: 13;
 }
 #playpage .container .wh {
   position: absolute;

@@ -1,6 +1,6 @@
 let myP5 = new p5((p) => {
     let fishArray = [];
-    const numFish = 30;
+    const numFish = 40;
     let fishTextures = [];
     let leafImage;
     let assetsLoaded = false;
@@ -9,6 +9,17 @@ let myP5 = new p5((p) => {
     let whTargetIndex = 26;
     let whChangeDelay = 200;
     let lastWhChangeTime = 0;
+    const fishLayerCanvases = [];
+    const pinchThreshold = 30;
+    let whInteractionLockUntil = 0;
+    let lastClapTime = 0;
+    const clapCooldown = 800;             // 拍手之間最小間隔（毫秒）
+    const clapDistanceThreshold = 60;     // 兩手掌心距離小於此值視為拍手
+    const clapSpeedThreshold = 8;         // 兩手合併的速度加總要大於此值
+    const clapEffectRadius = 120;         // 拍手中心點作用範圍
+    const shakeDuration = 1000;           // 魚晃動持續時間（毫秒）
+    const shakeFrequency = 15;            // 晃動頻率（Hz）
+    const shakeAmplitude = 12;            // 晃動振幅（像素）
 
 
     p.preload = function () {
@@ -16,16 +27,15 @@ let myP5 = new p5((p) => {
         const totalAssets = 30 + 1;
 
         for (let i = 1; i <= 30; i++) {
-            p.loadImage(`./img/${i}.gif`,
-                (img) => {
-                    fishTextures.push(img);
-                    loadedCount++;
-                    if (loadedCount === totalAssets) {
-                        assetsLoaded = true;
-                    }
-                },
-                () => { console.warn(`魚圖載入失敗: ./img/${i}.gif`); }
-            );
+            let gif = p.createVideo(`./img/${i}.webm`, () => {
+                gif.loop();
+                gif.hide();
+                fishTextures.push(gif.elt);
+                loadedCount++;
+                if (loadedCount === totalAssets) {
+                    assetsLoaded = true;
+                }
+            });
         }
 
         p.loadImage('./img/leaf.png',
@@ -41,6 +51,7 @@ let myP5 = new p5((p) => {
     };
 
     p.setup = function () {
+        p.smooth();
         // 取得 playpage container 和 wallbg1 元素
         const container = document.querySelector('#playpage .container');
         const wallbg1 = document.getElementById('wallbg1'); // 這是你想要的背景圖
@@ -58,16 +69,39 @@ let myP5 = new p5((p) => {
         container.appendChild(canvas.elt);
         canvas.elt.setAttribute('willReadFrequently', 'true');
 
+        for (let i = 0; i < 5; i++) {
+            const layerCanvas = document.getElementById(`fishlayer${i}`);
+            layerCanvas.width = canvasWidth;
+            layerCanvas.height = canvasHeight;
+            const ctx = layerCanvas.getContext('2d');
+
+            // **重點：打開平滑**
+            ctx.imageSmoothingEnabled = true;
+            // 若瀏覽器支援，可設定品質為 high
+            if ('imageSmoothingQuality' in ctx) {
+                ctx.imageSmoothingQuality = 'high';
+            }
+
+            fishLayerCanvases.push(ctx);
+        }
+
         // 設置 fishArray 和其他設定
+        const margin = 100;  // 魚一開始距離畫布邊界的距離
         for (let i = 0; i < numFish; i++) {
-            let pos;
-            let attempts = 0;
-            do {
-                pos = p.createVector(p.random(p.width), p.random(p.height * 0.7));
-                attempts++;
-                if (attempts > 100) break;
-            } while (isInHand(pos.x, pos.y));
-            fishArray.push(new Fish(pos.x, pos.y));
+            let x, y;
+            // 隨機決定從哪一邊飛入：left / top / right
+            const edge = p.random(['left', 'top', 'right']);
+            if (edge === 'left') {
+                x = -margin;
+                y = p.random(0, p.height * 0.7);
+            } else if (edge === 'right') {
+                x = p.width + margin;
+                y = p.random(0, p.height * 0.7);
+            } else {  // top
+                x = p.random(0, p.width);
+                y = -margin;
+            }
+            fishArray.push(new Fish(x, y));
         }
 
         // 窗口調整時更新 canvas 大小
@@ -101,7 +135,50 @@ let myP5 = new p5((p) => {
             window.prevHandKeypoints = window.handKeypoints.map(hand => hand.map(kp => ({ x: kp.x, y: kp.y })));
         }
 
+        for (let ctx of fishLayerCanvases) {
+            ctx.clearRect(0, 0, p.width, p.height);
+        }
         p.clear();
+
+        if (window.handKeypoints && window.handKeypointsSpeed && window.handKeypoints.length >= 2) {
+            const now = Date.now();
+            if (now - lastClapTime > clapCooldown) {
+                // 先取得 <video id="input-video"> 元素
+                const video = document.getElementById('input-video');
+                const videoWidth = video.videoWidth;
+                const videoHeight = video.videoHeight;
+
+                // 計算掌心中心、速度、距離……
+                function palmCenter(hand) {
+                    const idxs = [0, 1, 2, 3, 5, 9, 13, 17];
+                    let sum = { x: 0, y: 0 };
+                    for (let i of idxs) sum = { x: sum.x + hand[i].x, y: sum.y + hand[i].y };
+                    return { x: sum.x / idxs.length, y: sum.y / idxs.length };
+                }
+                const h0 = window.handKeypoints[0], h1 = window.handKeypoints[1];
+                const s0 = window.handKeypointsSpeed[0].reduce((a, b) => a + b, 0);
+                const s1 = window.handKeypointsSpeed[1].reduce((a, b) => a + b, 0);
+                const c0 = palmCenter(h0), c1 = palmCenter(h1);
+                // **這裡就可以安全地呼叫 mapToCanvas 了**
+                const m0 = mapToCanvas(c0.x, c0.y, videoWidth, videoHeight);
+                const m1 = mapToCanvas(c1.x, c1.y, videoWidth, videoHeight);
+
+                const dist = p.dist(m0.x, m0.y, m1.x, m1.y);
+                const speedSum = s0 + s1;
+                if (dist < clapDistanceThreshold && speedSum > clapSpeedThreshold) {
+                    lastClapTime = now;
+                    const clapX = (m0.x + m1.x) / 2;
+                    const clapY = (m0.y + m1.y) / 2;
+                    for (let fish of fishArray) {
+                        if (p.dist(fish.position.x, fish.position.y, clapX, clapY) < clapEffectRadius) {
+                            fish.shaken = true;
+                            fish.shakeStartTime = now;
+                        }
+                    }
+                }
+            }
+        }
+
 
         if (window.handKeypoints) {
             const video = document.getElementById('input-video');
@@ -168,6 +245,92 @@ let myP5 = new p5((p) => {
                     drawLeafAlongPolygon(p, shrinked, scaleFactor);
                 }
             }
+
+            window.handKeypoints.forEach((hand) => {
+                const thumb = hand[4];
+                const index = hand[8];
+                const mappedThumb = mapToCanvas(thumb.x, thumb.y, videoWidth, videoHeight);
+                const mappedIndex = mapToCanvas(index.x, index.y, videoWidth, videoHeight);
+                const midX = (mappedThumb.x + mappedIndex.x) / 2;
+                const midY = (mappedThumb.y + mappedIndex.y) / 2;
+                const pinchDist = p.dist(thumb.x, thumb.y, index.x, index.y);
+
+                if (pinchDist < pinchThreshold) {
+                    // 若捏合，嘗試把附近魚隻標記為 pinned
+                    fishArray.forEach(fish => {
+                        if (!fish.pinned) {
+                            let d = p.dist(fish.position.x, fish.position.y, midX, midY);
+                            if (d < pinchThreshold) {
+                                fish.pinned = true;
+                                fish.pinOffset = p.createVector(fish.position.x - midX, fish.position.y - midY);
+                            }
+                        }
+                    });
+                } else {
+                    // 解除所有魚隻的 pinned 狀態
+                    fishArray.forEach(fish => {
+                        if (fish.pinned) {
+                            fish.pinned = false;
+                        }
+                    });
+                }
+            });
+        }
+
+        {
+            // 閾值設定，可按實驗結果微調
+            const pokeSpeedThreshold = 5;  // 超過這個速度就視為「戳」
+            const strokeSpeedThreshold = 1;  // 低於這個速度就視為「撫摸」
+
+            const whDiv = document.querySelector('.wh');
+            const whImg = whDiv.querySelector('img');
+            const rect = whDiv.getBoundingClientRect();
+            const canvasRect = p.canvas.getBoundingClientRect();
+            let interaction = null;
+
+            if (window.handKeypoints && window.handKeypointsSpeed) {
+                const video = document.getElementById('input-video');
+                const vw = video.videoWidth, vh = video.videoHeight;
+
+                outer:
+                for (let h = 0; h < window.handKeypoints.length; h++) {
+                    for (let k = 0; k < window.handKeypoints[h].length; k++) {
+                        const kp = window.handKeypoints[h][k];
+                        const speed = window.handKeypointsSpeed[h][k];
+                        // 將影片座標轉成 canvas 上的 page 座標
+                        const mapped = mapToCanvas(kp.x, kp.y, vw, vh);
+                        const pageX = mapped.x + canvasRect.left;
+                        const pageY = mapped.y + canvasRect.top;
+                        if (
+                            pageX >= rect.left && pageX <= rect.right &&
+                            pageY >= rect.top && pageY <= rect.bottom
+                        ) {
+                            if (speed > pokeSpeedThreshold) {
+                                interaction = 'poke';
+                            } else if (speed > 0 && speed <= strokeSpeedThreshold) {
+                                interaction = 'stroke';
+                            }
+                            break outer;
+                        }
+                    }
+                }
+            }
+
+            // 只有當目前 wh 圖已經是 wh1.png（即 whImageIndex === 1）時，才做臨時覆蓋
+            if (whImageIndex === 1) {
+                const now = Date.now();
+                if (now >= whInteractionLockUntil) {
+                    if (interaction === 'poke' && !whImg.src.endsWith('wh1_1.png')) {
+                        whImg.src = './img/wh1_1.png';
+                        whInteractionLockUntil = now + 1000; // 鎖 1 秒
+                    } else if (interaction === 'stroke' && !whImg.src.endsWith('wh1_2.png')) {
+                        whImg.src = './img/wh1_2.png';
+                        whInteractionLockUntil = now + 1000; // 鎖 1 秒
+                    } else if (!interaction && !whImg.src.endsWith('wh1.gif')) {
+                        whImg.src = './img/wh1.gif';
+                    }
+                }
+            }
         }
 
         for (let fish of fishArray) {
@@ -175,8 +338,9 @@ let myP5 = new p5((p) => {
             fish.checkHandCollision();
         }
         for (let fish of fishArray) {
-            fish.display(p);
+            fish.displayToLayer(fishLayerCanvases[fish.depthLayer]);
         }
+
         // 判斷是否有魚停在手上
         let now = Date.now();
         const MIN_LANDED_FISH = 3;
@@ -199,12 +363,12 @@ let myP5 = new p5((p) => {
 
                 // 更新圖檔
                 let whImg = document.querySelector('.wh img');
+                // 計算副檔名：index=1 用 gif，其他用 png
+                const ext = whImageIndex === 1 ? 'gif' : 'png';
+                // 載入下一張圖片
                 let newImg = new Image();
-                newImg.onload = () => {
-                    whImg.src = newImg.src;
-                };
-                newImg.src = `./img/wh${whImageIndex}.png`;
-
+                newImg.onload = () => { whImg.src = newImg.src; };
+                newImg.src = `./img/wh${whImageIndex}.${ext}`;
             }
         }
 
@@ -234,13 +398,47 @@ let myP5 = new p5((p) => {
             this.changeDirectionInterval = p.int(p.random(100, 300));
             this.centerAttractionTimer = 0;
             this.centerAttractionInterval = p.int(p.random(300, 600));
-            this.texture = p.random(fishTextures);
+            const baseVideo = p.random(fishTextures);            // 隨機挑一支已 preload 的 video
+            const vid = baseVideo.cloneNode(true);                // 複製出獨立元素
+            vid.loop = true;
+            vid.onloadedmetadata = () => {
+                vid.currentTime = p.random(0, vid.duration);
+            };
+            //vid.playbackRate = p.random(0.9, 1.1);                // optional：稍微不同的播放速率
+            vid.play();
+            this.texture = vid;
             this.landed = false;
             this.landingTarget = null;
             this.landedTime = 0;
+            this.depthLayer = p.int(p.random(0, 5)); // 0～4 共 5 層
+            this.scaleFactor = p.map(this.depthLayer, 0, 4, 0.6, 1.2);
+
+            this.pinned = false;
+            this.pinOffset = p.createVector(0, 0);
+
+            this.shaken = false;
+            this.shakeStartTime = 0;
         }
 
         update() {
+
+            if (this.pinned && window.handKeypoints) {
+                const hand = window.handKeypoints[0];
+                const thumb = hand[4];
+                const index = hand[8];
+                const video = document.getElementById('input-video');
+                const videoWidth = video.videoWidth;
+                const videoHeight = video.videoHeight;
+                const mappedThumb = mapToCanvas(thumb.x, thumb.y, videoWidth, videoHeight);
+                const mappedIndex = mapToCanvas(index.x, index.y, videoWidth, videoHeight);
+                const midX = (mappedThumb.x + mappedIndex.x) / 2;
+                const midY = (mappedThumb.y + mappedIndex.y) / 2;
+                this.position.x = midX + this.pinOffset.x;
+                this.position.y = midY + this.pinOffset.y;
+                return;
+            }
+
+
             if (this.landed && this.landingTarget) {
                 this.position.x = p.lerp(this.position.x, this.landingTarget.x, 0.1);
                 this.position.y = p.lerp(this.position.y, this.landingTarget.y, 0.1);
@@ -332,16 +530,38 @@ let myP5 = new p5((p) => {
             }
         }
 
-        display(p) {
-            p.push();
-            p.translate(this.position.x, this.position.y);
-            p.rotate(this.angle + p.HALF_PI);
-            p.imageMode(p.CENTER);
-            let offset = p.createVector(p.cos(this.angle) * 20, p.sin(this.angle) * 20);
-            let headPosition = this.position.copy().add(offset);
-            p.image(this.texture, headPosition.x - this.position.x, headPosition.y - this.position.y, window.innerWidth * 0.05, window.innerWidth * 0.05);
-            p.pop();
+        displayToLayer(ctx) {
+
+            const now = Date.now();
+            let yOffset = 0;
+            if (this.shaken) {
+                const t = now - this.shakeStartTime;
+                if (t < shakeDuration) {
+                    // 正弦波上下晃動
+                    yOffset = Math.sin(t / 1000 * shakeFrequency * p.TWO_PI) * shakeAmplitude;
+                } else {
+                    this.shaken = false;
+                }
+            }
+            const angle = this.angle + Math.PI / 2;
+            const offsetX = Math.cos(this.angle) * 20;
+            const offsetY = Math.sin(this.angle) * 20;
+            const x = this.position.x + offsetX;
+            const y = this.position.y + offsetY;
+
+            const fishSize = window.innerWidth * 0.05 * this.scaleFactor;
+
+            // 改成 p.map（從外部作用域傳進來的 p）
+            const alpha = p.map(this.depthLayer, 0, 4, 200, 255);
+
+            ctx.save();
+            ctx.translate(this.position.x + offsetX, this.position.y + offsetY + yOffset);
+            ctx.rotate(angle);
+            ctx.globalAlpha = alpha / 255;
+            ctx.drawImage(this.texture, -fishSize / 2, -fishSize / 2, fishSize, fishSize);
+            ctx.restore();
         }
+
     }
 
     function lerpAngle(start, end, amt) {

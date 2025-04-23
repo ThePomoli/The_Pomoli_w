@@ -82,7 +82,7 @@ $(document).ready(function () {
     });
 
     function startPlayPageSequence() {
-        const delayBetween = 200;
+        const delayBetween = 1000;
         const wallbgs = ['#wallbg2', '#wallbg3', '#wallbg4', '#wallbg5', ".wh"];
 
         $.each(wallbgs, function (index, id) {
@@ -173,7 +173,8 @@ $(document).ready(function () {
     let lastWhIndex = 26;
 
     setInterval(() => {
-        if ($('#playpage').css('display') !== 'block') return;
+        if ($('#playpage').css('display') !== 'block') return; // 只有當 playpage 顯示時才執行
+    
         const whImg = document.querySelector('.wh img');
         if (!whImg) return;
     
@@ -201,8 +202,7 @@ $(document).ready(function () {
         if (elapsed > MAX_WH_WAIT_TIME) {
             triggerToAfterPlayPage();
         }
-    }, 200);
-    
+    }, 200);    
 
     let hasTriggeredAfter = false;
     let whTimerStartTime = Date.now();
@@ -239,7 +239,7 @@ $(document).ready(function () {
                 afterVideo.play().catch(console.warn)
 
                 afterVideo.addEventListener('ended', function () {
-                     location.reload();
+                    location.reload();
                 });
             });
         });
