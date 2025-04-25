@@ -326,21 +326,29 @@ let myP5 = new p5((p) => {
         //let now = Date.now();
         // 延遲20秒後才啟動圖片變化邏輯
         if (now - playStartTime > 20000) {
-            if (now - lastWhChangeTime > whChangeDelay) {
-                if (whImageIndex !== whTargetIndex) {
-                    if (whImageIndex < whTargetIndex) {
-                        whImageIndex++;
-                    } else {
-                        whImageIndex--;
-                    }
-                    lastWhChangeTime = now;
-
-                    let whImg = document.querySelector('.wh img');
-                    const ext = whImageIndex === 1 ? 'gif' : 'png';
-                    whImg.src = `./img/wh${whImageIndex}.${ext}`;
-                }
+    if (now - lastWhChangeTime > whChangeDelay) {
+        if (whImageIndex !== whTargetIndex) {
+            if (whImageIndex < whTargetIndex) {
+                whImageIndex++;
+            } else {
+                whImageIndex--;
             }
+
+            let whImg = document.querySelector('.wh img');
+            const ext = whImageIndex === 1 ? 'gif' : 'png';
+            const newSrc = `./img/wh${whImageIndex}.${ext}`;
+
+            // 创建一个新的 Image 对象
+            const tempImg = new Image();
+            tempImg.onload = function() {
+                whImg.src = newSrc;
+                lastWhChangeTime = now;
+            };
+            tempImg.src = newSrc;
         }
+    }
+}
+
 
     };
 
