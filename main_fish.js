@@ -21,6 +21,8 @@ let myP5 = new p5((p) => {
     const shakeFrequency = 15;            // 晃動頻率（Hz）
     const shakeAmplitude = 12;            // 晃動振幅（像素）
 
+    let playStartTime = 0;
+
 
     p.preload = function () {
         let loadedCount = 0;
@@ -115,6 +117,7 @@ let myP5 = new p5((p) => {
         }
 
         window.addEventListener('resize', windowResized);
+        playStartTime = Date.now();
     };
 
 
@@ -352,23 +355,21 @@ let myP5 = new p5((p) => {
 
         // 換圖的動畫控制
         //let now = Date.now();
-        if (now - lastWhChangeTime > whChangeDelay) {
-            if (whImageIndex !== whTargetIndex) {
-                if (whImageIndex < whTargetIndex) {
-                    whImageIndex++;
-                } else {
-                    whImageIndex--;
-                }
-                lastWhChangeTime = now;
 
-                // 更新圖檔
-                let whImg = document.querySelector('.wh img');
-                // 計算副檔名：index=1 用 gif，其他用 png
-                const ext = whImageIndex === 1 ? 'gif' : 'png';
-                // 載入下一張圖片
-                let newImg = new Image();
-                newImg.onload = () => { whImg.src = newImg.src; };
-                newImg.src = `./img/wh${whImageIndex}.${ext}`;
+        if (now - playStartTime > 20000) {
+            if (now - lastWhChangeTime > whChangeDelay) {
+                if (whImageIndex !== whTargetIndex) {
+                    if (whImageIndex < whTargetIndex) {
+                        whImageIndex++;
+                    } else {
+                        whImageIndex--;
+                    }
+                    lastWhChangeTime = now;
+
+                    let whImg = document.querySelector('.wh img');
+                    const ext = whImageIndex === 1 ? 'gif' : 'png';
+                    whImg.src = `./img/wh${whImageIndex}.${ext}`;
+                }
             }
         }
 
