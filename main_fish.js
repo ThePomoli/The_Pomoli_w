@@ -5,24 +5,21 @@ let myP5 = new p5((p) => {
     let leafImage;
     let assetsLoaded = false;
     const palmPolygonIndices = [0, 1, 2, 3, 5, 9, 13, 17, 0];
-    let whImageIndex = 26;
-    let whTargetIndex = 26;
+    let whImageIndex = 1;
+    let whTargetIndex = 1;
     let whChangeDelay = 200;
     let lastWhChangeTime = 0;
     const fishLayerCanvases = [];
-    const pinchThreshold = 30;
-    let whInteractionLockUntil = 0;
+    let playStartTime = 0;
     let lastClapTime = 0;
     const clapCooldown = 800;             // 拍手之間最小間隔（毫秒）
-    const clapDistanceThreshold = 60;     // 兩手掌心距離小於此值視為拍手
+    const clapDistanceThreshold = 30;     // 兩手掌心距離小於此值視為拍手
     const clapSpeedThreshold = 8;         // 兩手合併的速度加總要大於此值
     const clapEffectRadius = 120;         // 拍手中心點作用範圍
     const shakeDuration = 1000;           // 魚晃動持續時間（毫秒）
     const shakeFrequency = 15;            // 晃動頻率（Hz）
     const shakeAmplitude = 12;            // 晃動振幅（像素）
-
-    let playStartTime = 0;
-
+    let whInteractionLockUntil = 0;
 
     p.preload = function () {
         let loadedCount = 0;
@@ -117,6 +114,7 @@ let myP5 = new p5((p) => {
         }
 
         window.addEventListener('resize', windowResized);
+
         playStartTime = Date.now();
     };
 
@@ -248,41 +246,11 @@ let myP5 = new p5((p) => {
                     drawLeafAlongPolygon(p, shrinked, scaleFactor);
                 }
             }
-
-            window.handKeypoints.forEach((hand) => {
-                const thumb = hand[4];
-                const index = hand[8];
-                const mappedThumb = mapToCanvas(thumb.x, thumb.y, videoWidth, videoHeight);
-                const mappedIndex = mapToCanvas(index.x, index.y, videoWidth, videoHeight);
-                const midX = (mappedThumb.x + mappedIndex.x) / 2;
-                const midY = (mappedThumb.y + mappedIndex.y) / 2;
-                const pinchDist = p.dist(thumb.x, thumb.y, index.x, index.y);
-
-                if (pinchDist < pinchThreshold) {
-                    // 若捏合，嘗試把附近魚隻標記為 pinned
-                    fishArray.forEach(fish => {
-                        if (!fish.pinned) {
-                            let d = p.dist(fish.position.x, fish.position.y, midX, midY);
-                            if (d < pinchThreshold) {
-                                fish.pinned = true;
-                                fish.pinOffset = p.createVector(fish.position.x - midX, fish.position.y - midY);
-                            }
-                        }
-                    });
-                } else {
-                    // 解除所有魚隻的 pinned 狀態
-                    fishArray.forEach(fish => {
-                        if (fish.pinned) {
-                            fish.pinned = false;
-                        }
-                    });
-                }
-            });
         }
 
         {
             // 閾值設定，可按實驗結果微調
-            const pokeSpeedThreshold = 5;  // 超過這個速度就視為「戳」
+            const pokeSpeedThreshold = 10;  // 超過這個速度就視為「戳」
             const strokeSpeedThreshold = 1;  // 低於這個速度就視為「撫摸」
 
             const whDiv = document.querySelector('.wh');
@@ -306,7 +274,7 @@ let myP5 = new p5((p) => {
                         const pageY = mapped.y + canvasRect.top;
                         if (
                             pageX >= rect.left && pageX <= rect.right &&
-                            pageY >= rect.top && pageY <= rect.bottom
+                            pageY >= rect.top + rect.height / 2 && pageY <= rect.bottom
                         ) {
                             if (speed > pokeSpeedThreshold) {
                                 interaction = 'poke';
@@ -334,6 +302,7 @@ let myP5 = new p5((p) => {
                     }
                 }
             }
+
         }
 
         for (let fish of fishArray) {
@@ -355,7 +324,7 @@ let myP5 = new p5((p) => {
 
         // 換圖的動畫控制
         //let now = Date.now();
-
+        // 延遲20秒後才啟動圖片變化邏輯
         if (now - playStartTime > 20000) {
             if (now - lastWhChangeTime > whChangeDelay) {
                 if (whImageIndex !== whTargetIndex) {
@@ -412,34 +381,13 @@ let myP5 = new p5((p) => {
             this.landingTarget = null;
             this.landedTime = 0;
             this.depthLayer = p.int(p.random(0, 5)); // 0～4 共 5 層
-            this.scaleFactor = p.map(this.depthLayer, 0, 4, 0.6, 1.2);
-
-            this.pinned = false;
-            this.pinOffset = p.createVector(0, 0);
+            this.scaleFactor = p.map(this.depthLayer, 0, 4, 0.7, 1);
 
             this.shaken = false;
             this.shakeStartTime = 0;
         }
 
         update() {
-
-            if (this.pinned && window.handKeypoints) {
-                const hand = window.handKeypoints[0];
-                const thumb = hand[4];
-                const index = hand[8];
-                const video = document.getElementById('input-video');
-                const videoWidth = video.videoWidth;
-                const videoHeight = video.videoHeight;
-                const mappedThumb = mapToCanvas(thumb.x, thumb.y, videoWidth, videoHeight);
-                const mappedIndex = mapToCanvas(index.x, index.y, videoWidth, videoHeight);
-                const midX = (mappedThumb.x + mappedIndex.x) / 2;
-                const midY = (mappedThumb.y + mappedIndex.y) / 2;
-                this.position.x = midX + this.pinOffset.x;
-                this.position.y = midY + this.pinOffset.y;
-                return;
-            }
-
-
             if (this.landed && this.landingTarget) {
                 this.position.x = p.lerp(this.position.x, this.landingTarget.x, 0.1);
                 this.position.y = p.lerp(this.position.y, this.landingTarget.y, 0.1);
@@ -476,60 +424,84 @@ let myP5 = new p5((p) => {
             }
         }
 
+        isGrabGesture(hand) {
+            const thumbTip = hand[4];
+            const indexTip = hand[8];
+            // 以畫面比例決定閾值，這裡假設閾值為 30 畫素
+            return p.dist(thumbTip.x, thumbTip.y, indexTip.x, indexTip.y) < 30;
+        }
+
         checkHandCollision() {
-            const collisionThreshold = 50;
-            const lowSpeedThreshold = 2;
+        const collisionThreshold = 50;
+        const lowSpeedThreshold = 2;
 
-            let collided = false;
+        let collided = false;
 
-            if (window.handKeypoints && window.handKeypointsSpeed) {
-                const video = document.getElementById('input-video');
-                const videoWidth = video.videoWidth;
-                const videoHeight = video.videoHeight;
+        if (window.handKeypoints && window.handKeypointsSpeed) {
+            const video = document.getElementById('input-video');
+            const videoWidth = video.videoWidth;
+            const videoHeight = video.videoHeight;
 
-                for (let handIndex = 0; handIndex < window.handKeypoints.length; handIndex++) {
-                    const hand = window.handKeypoints[handIndex];
-                    const handSpeed = window.handKeypointsSpeed[handIndex];
+            for (let handIndex = 0; handIndex < window.handKeypoints.length; handIndex++) {
+                const hand = window.handKeypoints[handIndex];
+                const handSpeed = window.handKeypointsSpeed[handIndex];
 
-                    for (let kpIndex = 0; kpIndex < hand.length; kpIndex++) {
-                        const kp = hand[kpIndex];
-                        const speed = handSpeed[kpIndex];
-                        const mapped = mapToCanvas(kp.x, kp.y, videoWidth, videoHeight);
+                // 判斷是否為抓取手勢
+                const isGrab = this.isGrabGesture(hand);
 
-                        let d = p.dist(this.position.x, this.position.y, mapped.x, mapped.y);
-                        if (d < collisionThreshold) {
-                            collided = true;
+                for (let kpIndex = 0; kpIndex < hand.length; kpIndex++) {
+                    const kp = hand[kpIndex];
+                    const mapped = mapToCanvas(kp.x, kp.y, videoWidth, videoHeight);
+                    let d = p.dist(this.position.x, this.position.y, mapped.x, mapped.y);
 
+                    if (d < collisionThreshold) {
+                        collided = true;
+
+                        if (isGrab) {
+                            // 抓取動作：無條件黏住，跟著手移動
+                            this.landed = true;
+                            this.landingTarget = p.createVector(mapped.x, mapped.y);
+                            this.speed = 0;
+                            // 紀錄黏附時間
+                            if (this.landedTime === 0) {
+                                this.landedTime = Date.now();
+                            }
+                        } 
+                        else {
+                            // 原本的「輕觸／戳動」邏輯
+                            const speed = handSpeed[kpIndex];
                             if (speed < lowSpeedThreshold) {
+                                // 輕觸：落魚
                                 let offset = 30;
                                 this.landingTarget = p.createVector(mapped.x, mapped.y - offset);
                                 this.landed = true;
                                 this.speed = 0;
-
-                                // 記錄 landed 起始時間
                                 if (this.landedTime === 0) {
                                     this.landedTime = Date.now();
                                 }
-
                             } else {
+                                // 快速碰撞：逃跑
                                 this.landed = false;
                                 this.landedTime = 0;
                                 let escapeAngle = p.atan2(this.position.y - mapped.y, this.position.x - mapped.x);
                                 this.targetAngle = escapeAngle;
                                 this.speed = this.maxEscapeSpeed;
                             }
-                            return;
                         }
+
+                        return;  // 處理完一個碰撞點後就跳出
                     }
                 }
             }
-
-            if (!collided) {
-                this.landed = false;
-                this.landedTime = 0;
-                this.speed = p.lerp(this.speed, this.baseSpeed, 0.05);
-            }
         }
+
+        // 如果完全沒有碰到手或手勢改變／失去偵測，就解除黏附
+        if (!collided || (this.landed && (!window.handKeypoints || !this.isGrabGesture(window.handKeypoints[0]))) ) {
+            this.landed = false;
+            this.landedTime = 0;
+            this.speed = this.baseSpeed;
+        }
+    }
 
         displayToLayer(ctx) {
 
@@ -544,6 +516,8 @@ let myP5 = new p5((p) => {
                     this.shaken = false;
                 }
             }
+
+
             const angle = this.angle + Math.PI / 2;
             const offsetX = Math.cos(this.angle) * 20;
             const offsetY = Math.sin(this.angle) * 20;
@@ -553,7 +527,7 @@ let myP5 = new p5((p) => {
             const fishSize = window.innerWidth * 0.05 * this.scaleFactor;
 
             // 改成 p.map（從外部作用域傳進來的 p）
-            const alpha = p.map(this.depthLayer, 0, 4, 200, 255);
+            const alpha = p.map(this.depthLayer, 0, 4, 220, 255);
 
             ctx.save();
             ctx.translate(this.position.x + offsetX, this.position.y + offsetY + yOffset);
