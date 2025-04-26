@@ -12,6 +12,7 @@ let myP5 = new p5((p) => {
     const fishLayerCanvases = [];
     const pinchThreshold = 30;
     let playStartTime = 0;
+    let whInteractionLockUntil = 0;
 
     p.preload = function () {
         let loadedCount = 0;
@@ -270,12 +271,17 @@ let myP5 = new p5((p) => {
 
             // 只有當目前 wh 圖已經是 wh1.png（即 whImageIndex === 1）時，才做臨時覆蓋
             if (whImageIndex === 1) {
-                if (interaction === 'poke' && !whImg.src.endsWith('wh1_1.png')) {
-                    whImg.src = './img/wh1_1.png';
-                } else if (interaction === 'stroke' && !whImg.src.endsWith('wh1_2.png')) {
-                    whImg.src = './img/wh1_2.png';
-                } else if (!interaction && !whImg.src.endsWith('wh1.gif')) {
-                    whImg.src = './img/wh1.gif';
+                const now = Date.now();
+                if (now >= whInteractionLockUntil) {
+                    if (interaction === 'poke' && !whImg.src.endsWith('wh1_1.png')) {
+                        whImg.src = './img/wh1_1.png';
+                        whInteractionLockUntil = now + 1000; // 鎖 1 秒
+                    } else if (interaction === 'stroke' && !whImg.src.endsWith('wh1_2.png')) {
+                        whImg.src = './img/wh1_2.png';
+                        whInteractionLockUntil = now + 1000; // 鎖 1 秒
+                    } else if (!interaction && !whImg.src.endsWith('wh1.gif')) {
+                        whImg.src = './img/wh1.gif';
+                    }
                 }
             }
         }
@@ -290,7 +296,7 @@ let myP5 = new p5((p) => {
 
         // 判斷是否有魚停在手上
         let now = Date.now();
-        const MIN_LANDED_FISH = 3;
+        const MIN_LANDED_FISH = 5;
         const MIN_LANDED_TIME = 0;
 
         let landedFishCount = fishArray.filter(fish => fish.landed && (now - fish.landedTime >= MIN_LANDED_TIME)).length;
