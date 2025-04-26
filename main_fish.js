@@ -296,7 +296,7 @@ let myP5 = new p5((p) => {
 
         // 判斷是否有魚停在手上
         let now = Date.now();
-        const MIN_LANDED_FISH = 10;
+        const MIN_LANDED_FISH = 5;
         const MIN_LANDED_TIME = 0;
 
         let landedFishCount = fishArray.filter(fish => fish.landed && (now - fish.landedTime >= MIN_LANDED_TIME)).length;
@@ -393,8 +393,8 @@ let myP5 = new p5((p) => {
 
 
             if (this.landed && this.landingTarget) {
-                this.position.x = p.lerp(this.position.x, this.landingTarget.x, 0.03);
-                this.position.y = p.lerp(this.position.y, this.landingTarget.y, 0.03);
+                this.position.x = p.lerp(this.position.x, this.landingTarget.x, 0.05);
+                this.position.y = p.lerp(this.position.y, this.landingTarget.y, 0.05);
                 return;
             }
 
@@ -493,7 +493,7 @@ let myP5 = new p5((p) => {
             const fishSize = window.innerWidth * 0.05 * this.scaleFactor;
 
             // 改成 p.map（從外部作用域傳進來的 p）
-            const alpha = p.map(this.depthLayer, 0, 4, 220, 255);
+            const alpha = p.map(this.depthLayer, 0, 4, 180, 255);
 
             ctx.save();
             ctx.translate(x, y);
