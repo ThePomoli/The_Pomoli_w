@@ -480,7 +480,7 @@ let myP5 = new p5((p) => {
             const fishSize = window.innerWidth * 0.05 * this.scaleFactor;
 
             // 改成 p.map（從外部作用域傳進來的 p）
-            const alpha = p.map(this.depthLayer, 0, 4, 180, 255);
+            const alpha = p.map(this.depthLayer, 0, 4, 220, 255);
 
             ctx.save();
             ctx.translate(x, y);
