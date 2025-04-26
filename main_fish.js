@@ -5,8 +5,8 @@ let myP5 = new p5((p) => {
     let leafImage;
     let assetsLoaded = false;
     const palmPolygonIndices = [0, 1, 2, 3, 5, 9, 13, 17, 0];
-    let whImageIndex = 26;
-    let whTargetIndex = 26;
+    let whImageIndex = 1;
+    let whTargetIndex = 1;
     let whChangeDelay = 200;
     let lastWhChangeTime = 0;
     const fishLayerCanvases = [];
@@ -307,26 +307,31 @@ let myP5 = new p5((p) => {
 
         // 換圖的動畫控制
         //let now = Date.now();
-        if (now - playStartTime > 20000) {
-            if (now - lastWhChangeTime > whChangeDelay) {
-                if (whImageIndex !== whTargetIndex) {
-                    if (whImageIndex < whTargetIndex) {
-                        whImageIndex++;
-                    } else {
-                        whImageIndex--;
+
+
+        if(playStartTime!==0){
+            console.log(now - playStartTime );
+            if (now - playStartTime > 30000) {
+                if (now - lastWhChangeTime > whChangeDelay) {
+                    if (whImageIndex !== whTargetIndex) {
+                        if (whImageIndex < whTargetIndex) {
+                            whImageIndex++;
+                        } else {
+                            whImageIndex--;
+                        }
+    
+                        let whImg = document.querySelector('.wh img');
+                        const ext = whImageIndex === 1 ? 'gif' : 'png';
+                        const newSrc = `./img/wh${whImageIndex}.${ext}`;
+    
+                        // 创建一个新的 Image 对象
+                        const tempImg = new Image();
+                        tempImg.onload = function () {
+                            whImg.src = newSrc;
+                            lastWhChangeTime = now;
+                        };
+                        tempImg.src = newSrc;
                     }
-
-                    let whImg = document.querySelector('.wh img');
-                    const ext = whImageIndex === 1 ? 'gif' : 'png';
-                    const newSrc = `./img/wh${whImageIndex}.${ext}`;
-
-                    // 创建一个新的 Image 对象
-                    const tempImg = new Image();
-                    tempImg.onload = function () {
-                        whImg.src = newSrc;
-                        lastWhChangeTime = now;
-                    };
-                    tempImg.src = newSrc;
                 }
             }
         }
