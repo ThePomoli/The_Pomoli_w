@@ -1,6 +1,6 @@
 let myP5 = new p5((p) => {
     let fishArray = [];
-    const numFish = 30;
+    const numFish = 40;
     let fishTextures = [];
     let leafImage;
     let assetsLoaded = false;
