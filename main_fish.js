@@ -526,7 +526,7 @@ let myP5 = new p5((p) => {
             const alpha = p.map(this.depthLayer, 0, 4, 220, 255);
 
             ctx.save();
-            ctx.translate(this.position.x + offsetX, this.position.y + offsetY + yOffset);
+            ctx.translate(x,y);
             ctx.rotate(angle);
             ctx.globalAlpha = alpha / 255;
             ctx.drawImage(this.texture, -fishSize / 2, -fishSize / 2, fishSize, fishSize);
