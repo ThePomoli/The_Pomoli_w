@@ -393,8 +393,8 @@ let myP5 = new p5((p) => {
 
 
             if (this.landed && this.landingTarget) {
-                this.position.x = p.lerp(this.position.x, this.landingTarget.x, 0.1);
-                this.position.y = p.lerp(this.position.y, this.landingTarget.y, 0.1);
+                this.position.x = p.lerp(this.position.x, this.landingTarget.x, 0.05);
+                this.position.y = p.lerp(this.position.y, this.landingTarget.y, 0.05);
                 return;
             }
 
