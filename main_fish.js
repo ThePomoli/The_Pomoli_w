@@ -310,7 +310,7 @@ let myP5 = new p5((p) => {
 
 
         if(playStartTime!==0){
-            console.log(now - playStartTime );
+            //console.log(now - playStartTime );
             if (now - playStartTime > 30000) {
                 if (now - lastWhChangeTime > whChangeDelay) {
                     if (whImageIndex !== whTargetIndex) {
