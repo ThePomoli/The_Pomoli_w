@@ -141,44 +141,44 @@ let myP5 = new p5((p) => {
         }
         p.clear();
 
-        if (window.handKeypoints && window.handKeypointsSpeed && window.handKeypoints.length >= 2) {
-            const now = Date.now();
-            if (now - lastClapTime > clapCooldown) {
-                // 先取得 <video id="input-video"> 元素
-                const video = document.getElementById('input-video');
-                const videoWidth = video.videoWidth;
-                const videoHeight = video.videoHeight;
+        // if (window.handKeypoints && window.handKeypointsSpeed && window.handKeypoints.length >= 2) {
+        //     const now = Date.now();
+        //     if (now - lastClapTime > clapCooldown) {
+        //         // 先取得 <video id="input-video"> 元素
+        //         const video = document.getElementById('input-video');
+        //         const videoWidth = video.videoWidth;
+        //         const videoHeight = video.videoHeight;
 
-                // 計算掌心中心、速度、距離……
-                function palmCenter(hand) {
-                    const idxs = [0, 1, 2, 3, 5, 9, 13, 17];
-                    let sum = { x: 0, y: 0 };
-                    for (let i of idxs) sum = { x: sum.x + hand[i].x, y: sum.y + hand[i].y };
-                    return { x: sum.x / idxs.length, y: sum.y / idxs.length };
-                }
-                const h0 = window.handKeypoints[0], h1 = window.handKeypoints[1];
-                const s0 = window.handKeypointsSpeed[0].reduce((a, b) => a + b, 0);
-                const s1 = window.handKeypointsSpeed[1].reduce((a, b) => a + b, 0);
-                const c0 = palmCenter(h0), c1 = palmCenter(h1);
-                // **這裡就可以安全地呼叫 mapToCanvas 了**
-                const m0 = mapToCanvas(c0.x, c0.y, videoWidth, videoHeight);
-                const m1 = mapToCanvas(c1.x, c1.y, videoWidth, videoHeight);
+        //         // 計算掌心中心、速度、距離……
+        //         function palmCenter(hand) {
+        //             const idxs = [0, 1, 2, 3, 5, 9, 13, 17];
+        //             let sum = { x: 0, y: 0 };
+        //             for (let i of idxs) sum = { x: sum.x + hand[i].x, y: sum.y + hand[i].y };
+        //             return { x: sum.x / idxs.length, y: sum.y / idxs.length };
+        //         }
+        //         const h0 = window.handKeypoints[0], h1 = window.handKeypoints[1];
+        //         const s0 = window.handKeypointsSpeed[0].reduce((a, b) => a + b, 0);
+        //         const s1 = window.handKeypointsSpeed[1].reduce((a, b) => a + b, 0);
+        //         const c0 = palmCenter(h0), c1 = palmCenter(h1);
+        //         // **這裡就可以安全地呼叫 mapToCanvas 了**
+        //         const m0 = mapToCanvas(c0.x, c0.y, videoWidth, videoHeight);
+        //         const m1 = mapToCanvas(c1.x, c1.y, videoWidth, videoHeight);
 
-                const dist = p.dist(m0.x, m0.y, m1.x, m1.y);
-                const speedSum = s0 + s1;
-                if (dist < clapDistanceThreshold && speedSum > clapSpeedThreshold) {
-                    lastClapTime = now;
-                    const clapX = (m0.x + m1.x) / 2;
-                    const clapY = (m0.y + m1.y) / 2;
-                    for (let fish of fishArray) {
-                        if (p.dist(fish.position.x, fish.position.y, clapX, clapY) < clapEffectRadius) {
-                            fish.shaken = true;
-                            fish.shakeStartTime = now;
-                        }
-                    }
-                }
-            }
-        }
+        //         const dist = p.dist(m0.x, m0.y, m1.x, m1.y);
+        //         const speedSum = s0 + s1;
+        //         if (dist < clapDistanceThreshold && speedSum > clapSpeedThreshold) {
+        //             lastClapTime = now;
+        //             const clapX = (m0.x + m1.x) / 2;
+        //             const clapY = (m0.y + m1.y) / 2;
+        //             for (let fish of fishArray) {
+        //                 if (p.dist(fish.position.x, fish.position.y, clapX, clapY) < clapEffectRadius) {
+        //                     fish.shaken = true;
+        //                     fish.shakeStartTime = now;
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
 
 
         if (window.handKeypoints) {
