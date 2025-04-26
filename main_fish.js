@@ -204,29 +204,31 @@ let myP5 = new p5((p) => {
                 const index = hand[8];
                 const mappedThumb = mapToCanvas(thumb.x, thumb.y, videoWidth, videoHeight);
                 const mappedIndex = mapToCanvas(index.x, index.y, videoWidth, videoHeight);
-                const midX = (mappedThumb.x + mappedIndex.x) / 2;
-                const midY = (mappedThumb.y + mappedIndex.y) / 2;
-                const pinchDist = p.dist(thumb.x, thumb.y, index.x, index.y);
+                // --- 計算 canvas 座標下的捏合中心和距離 ---
+                const t = mapToCanvas(thumb.x, thumb.y, videoWidth, videoHeight);
+                const i = mapToCanvas(index.x, index.y, videoWidth, videoHeight);
+                const midX = (t.x + i.x) / 2;
+                const midY = (t.y + i.y) / 2;
+                const pinchDist = p.dist(t.x, t.y, i.x, i.y);
 
                 if (pinchDist < pinchThreshold) {
-                    // 若捏合，嘗試把附近魚隻標記為 pinned
                     fishArray.forEach(fish => {
                         if (!fish.pinned) {
-                            let d = p.dist(fish.position.x, fish.position.y, midX, midY);
-                            if (d < pinchThreshold) {
+                            // 用 canvas 座標來算魚和中點的距離
+                            if (p.dist(fish.position.x, fish.position.y, midX, midY) < pinchThreshold) {
                                 fish.pinned = true;
+                                // 這裡確定都是 canvas 座標
                                 fish.pinOffset = p.createVector(fish.position.x - midX, fish.position.y - midY);
                             }
                         }
                     });
                 } else {
-                    // 解除所有魚隻的 pinned 狀態
                     fishArray.forEach(fish => {
-                        if (fish.pinned) {
-                            fish.pinned = false;
-                        }
+                        fish.pinned = false;
+                        fish.pinOffset.set(0, 0);
                     });
                 }
+
             });
         }
 
