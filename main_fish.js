@@ -296,7 +296,7 @@ let myP5 = new p5((p) => {
 
         // 判斷是否有魚停在手上
         let now = Date.now();
-        const MIN_LANDED_FISH = 5;
+        const MIN_LANDED_FISH = 8;
         const MIN_LANDED_TIME = 0;
 
         let landedFishCount = fishArray.filter(fish => fish.landed && (now - fish.landedTime >= MIN_LANDED_TIME)).length;
