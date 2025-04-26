@@ -330,19 +330,6 @@ let myP5 = new p5((p) => {
         }
     };
 
-    function isInHand(x, y) {
-        if (!window.handKeypoints) return false;
-        const handThreshold = 50;
-        for (let hand of window.handKeypoints) {
-            for (let kp of hand) {
-                if (p.dist(x, y, kp.x, kp.y) < handThreshold) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     class Fish {
         constructor(x, y) {
             this.position = p.createVector(x, y);
