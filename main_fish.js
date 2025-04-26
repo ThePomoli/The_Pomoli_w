@@ -513,18 +513,6 @@ let myP5 = new p5((p) => {
 
         displayToLayer(ctx) {
 
-            const now = Date.now();
-            let yOffset = 0;
-            if (this.shaken) {
-                const t = now - this.shakeStartTime;
-                if (t < shakeDuration) {
-                    // 正弦波上下晃動
-                    yOffset = Math.sin(t / 1000 * shakeFrequency * p.TWO_PI) * shakeAmplitude;
-                } else {
-                    this.shaken = false;
-                }
-            }
-
 
             const angle = this.angle + Math.PI / 2;
             const offsetX = Math.cos(this.angle) * 20;
